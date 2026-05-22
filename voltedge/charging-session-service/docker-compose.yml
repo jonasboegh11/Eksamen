@@ -1,0 +1,7 @@
+services:
+  charging-session-service:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=development
