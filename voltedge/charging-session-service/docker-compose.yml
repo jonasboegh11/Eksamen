@@ -5,3 +5,31 @@ services:
       - "8000:8000"
     environment:
       - ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=voltedge
+      - DB_USER=voltedge
+      - DB_PASSWORD=voltedge123
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=voltedge
+      - MYSQL_USER=voltedge
+      - MYSQL_PASSWORD=voltedge123
+      - MYSQL_ROOT_PASSWORD=root123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_data:

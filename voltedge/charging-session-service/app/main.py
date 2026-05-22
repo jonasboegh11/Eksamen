@@ -2,8 +2,11 @@ import logging
 import sys
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+import os
 
-# Struktureret logning - løser A4.3 (manglende standardisering i logning)
+load_dotenv()
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -15,6 +18,7 @@ logger = logging.getLogger("voltedge.charging-session")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("VoltEdge Charging Session Service starting up")
+    logger.info(f"Connecting to database: {os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}")
     yield
     logger.info("VoltEdge Charging Session Service shutting down")
 
