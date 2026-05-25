@@ -3,6 +3,7 @@ import sys
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+from app.api.telemetry_router import router as telemetry_router
 import os
 
 load_dotenv()
@@ -28,6 +29,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+app.include_router(telemetry_router)
 
 @app.get("/health")
 def health_check():
