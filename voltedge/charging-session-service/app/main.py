@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from app.api.telemetry_router import router as telemetry_router
+from app.infrastructure.database import init_db
 import os
 
 load_dotenv()
@@ -20,6 +21,7 @@ logger = logging.getLogger("voltedge.charging-session")
 async def lifespan(app: FastAPI):
     logger.info("VoltEdge Charging Session Service starting up")
     logger.info(f"Connecting to database: {os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}")
+    init_db()
     yield
     logger.info("VoltEdge Charging Session Service shutting down")
 
