@@ -1,7 +1,7 @@
 # VoltEdge Charging Session Service — TODO
 
 ## API
-- [ ] GET endpoints til at hente incidents
+- [x] GET endpoints til at hente incidents
 - [ ] Analytics endpoint (incidents per lader, per severity)
 
 ## DDD
