@@ -4,6 +4,10 @@
 - [ ] GET endpoints til at hente incidents
 - [ ] Analytics endpoint (incidents per lader, per severity)
 
+## DDD
+- [ ] Aggregater skal være tydelige i koden (eksamenskrav)
+- [ ] Entiteter, value objects og domain services skal kunne identificeres
+
 ## DevSecOps
 - [ ] CI/CD pipeline i GitHub Actions (build + test)
 - [ ] Detect secrets i GitHub Actions (scanner for passwords/API keys i koden)
