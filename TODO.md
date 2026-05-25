@@ -9,8 +9,8 @@
 - [ ] Entiteter, value objects og domain services skal kunne identificeres
 
 ## DevSecOps
-- [ ] CI/CD pipeline i GitHub Actions (build + test)
-- [ ] Detect secrets i GitHub Actions (scanner for passwords/API keys i koden)
+- [x] CI/CD pipeline i GitHub Actions (build + test)
+- [x] Detect secrets i GitHub Actions (scanner for passwords/API keys i koden)
 
 ## Overvågning
 - [ ] Prometheus (samler metrics fra API'et)
