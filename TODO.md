@@ -16,5 +16,8 @@
 - [ ] Prometheus (samler metrics fra API'et)
 - [ ] Grafana (visualiserer metrics fra Prometheus)
 
+## Machine Learning
+- [ ] Predictive incident service (forudsig fejl baseret på historisk telemetri)
+
 ## Dokumentation
 - [ ] README fyldestgørende med setup, arkitektur og hvordan man kører projektet
