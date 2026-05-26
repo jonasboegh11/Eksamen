@@ -16,20 +16,23 @@ def get_connection():
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS incidents (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            incident_id VARCHAR(36) NOT NULL,
             charger_id VARCHAR(50) NOT NULL,
             severity VARCHAR(20) NOT NULL,
             rule_name VARCHAR(50) NOT NULL,
             message TEXT NOT NULL,
             value FLOAT NOT NULL,
             threshold FLOAT NOT NULL,
-            timestamp DATETIME NOT NULL
+            timestamp DATETIME NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'open',
+            sla_deadline DATETIME
         )
     """)
-    
+
     conn.commit()
     cursor.close()
     conn.close()

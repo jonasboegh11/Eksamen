@@ -5,9 +5,9 @@
 - [ ] Analytics endpoint (incidents per lader, per severity)
 
 ## DDD
-- [ ] Charger som aggregat med metoder i Python koden
-- [ ] Incident som entitet med unikt id i Python koden
-- [ ] Telemetry som value object i Python koden
+- [x] Charger som aggregat med metoder i Python koden
+- [x] Incident som entitet med unikt id i Python koden
+- [x] Telemetry som value object i Python koden
 - [ ] Klassediagram der matcher Python koden
 
 ## DevSecOps
@@ -28,3 +28,4 @@
 
 ## Dokumentation
 - [ ] README fyldestgørende med setup, arkitektur og hvordan man kører projektet
+- [ ] Klassediagram der matcher Python koden

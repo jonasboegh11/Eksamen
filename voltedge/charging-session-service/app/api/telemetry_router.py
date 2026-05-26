@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.domain.telemetry import Telemetry
+from app.domain.charger import ChargerDevice
 from app.domain.rule_engine import evaluate
 from app.infrastructure.database import get_connection
 import logging
@@ -12,7 +13,16 @@ router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
 def receive_telemetry(telemetry: Telemetry):
     logger.info(f"Telemetri modtaget fra lader {telemetry.charger_id} | {telemetry.power_kw} kW | {telemetry.status}")
 
+    charger = ChargerDevice(
+        charger_id=telemetry.charger_id,
+        status=telemetry.status.value
+    )
+
+    charger.receive_telemetry(telemetry)
     incidents = evaluate(telemetry)
+
+    for incident in incidents:
+        charger.add_incident(incident)
 
     if incidents:
         try:
@@ -21,16 +31,19 @@ def receive_telemetry(telemetry: Telemetry):
             for incident in incidents:
                 logger.warning(f"INCIDENT [{incident.severity.upper()}] | {incident.rule_name} | {incident.message}")
                 cursor.execute("""
-                    INSERT INTO incidents (charger_id, severity, rule_name, message, value, threshold, timestamp)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO incidents (incident_id, charger_id, severity, rule_name, message, value, threshold, timestamp, status, sla_deadline)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
+                    incident.incident_id,
                     incident.charger_id,
                     incident.severity,
                     incident.rule_name,
                     incident.message,
                     incident.value,
                     incident.threshold,
-                    incident.timestamp
+                    incident.timestamp,
+                    incident.status,
+                    incident.sla_deadline.deadline
                 ))
             conn.commit()
             cursor.close()
@@ -43,7 +56,9 @@ def receive_telemetry(telemetry: Telemetry):
         logger.info(f"Ingen incidents for lader {telemetry.charger_id}")
 
     return {
-        "charger_id": telemetry.charger_id,
+        "charger_id": charger.charger_id,
+        "status": charger.status,
+        "has_critical_incidents": charger.has_critical_incidents(),
         "incidents_count": len(incidents),
         "incidents": incidents
     }
