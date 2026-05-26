@@ -11,7 +11,6 @@
 - [x] Anomaly som aggregat med events i Python koden
 - [x] Technician som entitet i Python koden
 - [x] Domain events der matcher event storming diagram
-- [ ] Klassediagram der matcher Python koden
 
 ## DevSecOps
 - [x] CI/CD pipeline i GitHub Actions (build + test)
@@ -27,8 +26,7 @@
 - [x] Grafana dashboard 2 — forretningsdata (incidents per lader, per severity, over tid)
 
 ## Machine Learning — A4.2
-- [ ] Predictive incident service (forudsig fejl baseret på historisk telemetri)
+- [x] Predictive incident service (forudsig fejl baseret på historisk telemetri)
 
 ## Dokumentation
-- [ ] README fyldestgørende med setup, arkitektur og hvordan man kører projektet
-- [ ] Klassediagram der matcher Python koden
+- [x] README fyldestgørende med setup, arkitektur og hvordan man kører projektet
