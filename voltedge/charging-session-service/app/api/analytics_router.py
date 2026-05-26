@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from app.infrastructure.database import get_connection
+from app.domain.prediction_service import PredictionService, ChargerFeatures
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
+prediction_service = PredictionService()
 
 @router.get("/incidents-per-severity")
 def incidents_per_severity():
@@ -97,3 +99,55 @@ def summary():
     except Exception as e:
         logger.error(f"Fejl ved analytics: {e}")
         raise HTTPException(status_code=500, detail="Fejl ved analytics")
+
+@router.get("/predict/{charger_id}")
+def predict_risk(charger_id: str):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Hent incidents de sidste 24 timer
+        cursor.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical_count,
+                SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high_count,
+                AVG(value) as avg_value
+            FROM incidents
+            WHERE charger_id = %s
+            AND timestamp >= NOW() - INTERVAL 24 HOUR
+        """, (charger_id,))
+
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        total = result["total"] or 0
+        critical_count = result["critical_count"] or 0
+        avg_value = float(result["avg_value"] or 0)
+        critical_ratio = critical_count / total if total > 0 else 0.0
+
+        features = ChargerFeatures(
+            charger_id=charger_id,
+            total_incidents_24h=total,
+            critical_count_24h=critical_count,
+            high_count_24h=result["high_count"] or 0,
+            critical_ratio=critical_ratio,
+            avg_value=avg_value
+        )
+
+        prediction = prediction_service.predict(features)
+        logger.info(f"Prediction for {charger_id}: {prediction.risk_level} ({prediction.risk_score})")
+
+        return {
+            "charger_id": prediction.charger_id,
+            "risk_score": prediction.risk_score,
+            "risk_level": prediction.risk_level,
+            "recommendation": prediction.recommendation,
+            "based_on_incidents": prediction.based_on_incidents,
+            "predicted_at": prediction.predicted_at
+        }
+
+    except Exception as e:
+        logger.error(f"Fejl ved prediction: {e}")
+        raise HTTPException(status_code=500, detail="Fejl ved prediction")
