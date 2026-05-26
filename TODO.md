@@ -29,4 +29,4 @@
 - [x] Predictive incident service (forudsig fejl baseret på historisk telemetri)
 
 ## Dokumentation
-- [x] README fyldestgørende med setup, arkitektur og hvordan man kører projektet
+- [x] README fyldestgørende med setup, arkitektur og hvordan man kører projektet.
