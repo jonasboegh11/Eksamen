@@ -2,7 +2,7 @@
 
 ## API
 - [x] GET endpoints til at hente incidents
-- [ ] Analytics endpoint (incidents per lader, per severity)
+- [x] Analytics endpoint (incidents per lader, per severity)
 
 ## DDD
 - [x] Charger som aggregat med metoder i Python koden
