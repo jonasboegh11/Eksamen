@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from datetime import datetime
 from enum import Enum
 
@@ -8,14 +9,13 @@ class ChargerStatus(str, Enum):
     FAULTED = "faulted"
     OFFLINE = "offline"
 
-# Value Object — ingen unik identitet, to ens målinger er identiske
+# Value Object
 class MeasurementValue(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    
     power_kw: float
     voltage: float
     current: float
-
-    class Config:
-        frozen = True  # Value objects er immutable
 
     def is_overloaded(self) -> bool:
         return self.power_kw > 50
@@ -23,22 +23,21 @@ class MeasurementValue(BaseModel):
     def is_voltage_abnormal(self) -> bool:
         return self.voltage < 207 or self.voltage > 253
 
-# Value Object — repræsenterer en telemetri-strøm fra en lader
+# Value Object
 class TelemetryStream(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    
     charger_id: str
     status: ChargerStatus
     measurement: MeasurementValue
     timestamp: datetime = None
-
-    class Config:
-        frozen = True  # Value objects er immutable
 
     def __init__(self, **data):
         if not data.get("timestamp"):
             data["timestamp"] = datetime.utcnow()
         super().__init__(**data)
 
-# Bagudkompatibilitet — så eksisterende kode stadig virker
+# Bagudkompatibilitet
 class Telemetry(BaseModel):
     charger_id: str
     status: ChargerStatus
