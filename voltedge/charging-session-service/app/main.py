@@ -24,7 +24,10 @@ logger = logging.getLogger("voltedge.charging-session")
 async def lifespan(app: FastAPI):
     logger.info("VoltEdge Charging Session Service starting up")
     logger.info(f"Connecting to database: {os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}")
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        logger.warning(f"Database ikke tilgængelig ved opstart: {e}")
     yield
     logger.info("VoltEdge Charging Session Service shutting down")
 

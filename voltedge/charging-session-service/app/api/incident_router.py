@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.infrastructure.incident_repository import IncidentRepository
+from app.domain.incident import Severity
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
@@ -8,7 +9,7 @@ router = APIRouter(prefix="/incidents", tags=["Incidents"])
 repository = IncidentRepository()
 
 @router.get("/")
-def get_incidents(severity: str = None, charger_id: str = None):
+def get_incidents(severity: Severity = None, charger_id: str = None):
     try:
         incidents = repository.get_all(severity=severity, charger_id=charger_id)
         logger.info(f"Hentet {len(incidents)} incidents — filters: severity={severity}, charger_id={charger_id}")
