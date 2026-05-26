@@ -3,7 +3,7 @@ from app.domain.telemetry import Telemetry
 from app.domain.charger import ChargerDevice
 from app.domain.anomaly import Anomaly
 from app.domain.incident import Incident
-from app.domain.events import AlarmTriggered, TelemetryStored, TelemetryRejected
+from app.domain.events import AlarmTriggered
 from app.infrastructure.incident_repository import IncidentRepository
 import logging
 
@@ -14,30 +14,44 @@ repository = IncidentRepository()
 
 @router.post("/")
 def receive_telemetry(telemetry: Telemetry):
-    stream = telemetry.to_stream()
-    logger.info(f"Telemetri modtaget fra lader {stream.charger_id} | {stream.measurement.power_kw} kW | {stream.status}")
 
+    # Opret TelemetryStream aggregat og kør aggregat-metoder
+    stream = telemetry.to_stream()
+    try:
+        stream.receive(telemetry)
+        logger.info(f"EVENT: TelemetryReceived | {stream.charger_id} | {stream.measurement.power_kw} kW | {stream.status}")
+    except Exception as e:
+        stream.reject(reason=str(e))
+        for event in stream.pull_events():
+            logger.warning(f"EVENT: {event.__class__.__name__} | {event.charger_id} | {getattr(event, 'reason', '')}")
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # Opret ChargerDevice aggregat og modtag telemetri
     try:
         charger = ChargerDevice(
             charger_id=stream.charger_id,
             status=stream.status.value
         )
         charger.receive_telemetry(telemetry)
-
-        stored_event = TelemetryStored(charger_id=telemetry.charger_id)
-        logger.info(f"EVENT: TelemetryStored | {stored_event.charger_id}")
-
+        stream.store()
     except Exception as e:
-        rejected_event = TelemetryRejected(charger_id=telemetry.charger_id, reason=str(e))
-        logger.warning(f"EVENT: TelemetryRejected | {rejected_event.charger_id} | {rejected_event.reason}")
+        stream.reject(reason=str(e))
+        for event in stream.pull_events():
+            logger.warning(f"EVENT: {event.__class__.__name__} | {event.charger_id} | {getattr(event, 'reason', '')}")
         raise HTTPException(status_code=422, detail=str(e))
 
+    # Publish alle TelemetryStream events
+    for event in stream.pull_events():
+        logger.info(f"EVENT: {event.__class__.__name__} | {event.charger_id}")
+
+    # Anomalidetektion
     anomaly = Anomaly(charger_id=telemetry.charger_id)
     anomaly_events = anomaly.analyze(telemetry)
 
     for event in anomaly_events:
         logger.info(f"EVENT: {event.__class__.__name__} | {event.charger_id}")
 
+    # Incidentoprettelse
     incidents = []
     try:
         for event in anomaly_events:
