@@ -1,17 +1,28 @@
-import mysql.connector
+import mysql.connector.pooling
 import os
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
 
+_pool = None
+
+def get_pool():
+    global _pool
+    if _pool is None:
+        _pool = mysql.connector.pooling.MySQLConnectionPool(
+            pool_name="voltedge_pool",
+            pool_size=10,
+            host=os.getenv("DB_HOST"),
+            port=int(os.getenv("DB_PORT", 3306)),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD")
+        )
+        logger.info("Database connection pool oprettet (pool_size=10)")
+    return _pool
+
 def get_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT", 3306)),
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
-    )
+    return get_pool().get_connection()
 
 def init_db():
     try:

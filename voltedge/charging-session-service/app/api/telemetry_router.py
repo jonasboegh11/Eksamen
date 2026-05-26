@@ -5,12 +5,14 @@ from app.domain.anomaly import Anomaly
 from app.domain.incident import Incident
 from app.domain.events import AlarmTriggered
 from app.infrastructure.incident_repository import IncidentRepository
+from app.infrastructure.charger_repository import ChargerRepository
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
 
 router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
 repository = IncidentRepository()
+charger_repository = ChargerRepository()
 
 @router.post("/")
 def receive_telemetry(telemetry: Telemetry):
@@ -26,12 +28,14 @@ def receive_telemetry(telemetry: Telemetry):
             logger.warning(f"EVENT: {event.__class__.__name__} | {event.charger_id} | {getattr(event, 'reason', '')}")
         raise HTTPException(status_code=422, detail=str(e))
 
-    # Opret ChargerDevice aggregat og modtag telemetri
+    # Opret ChargerDevice aggregat og load persisteret state fra db
     try:
         charger = ChargerDevice(
             charger_id=stream.charger_id,
             status=stream.status.value
         )
+        has_critical = charger_repository.has_critical_incidents(stream.charger_id)
+        charger.set_critical_from_db(has_critical)
         charger.receive_telemetry(telemetry)
         stream.store()
     except Exception as e:
