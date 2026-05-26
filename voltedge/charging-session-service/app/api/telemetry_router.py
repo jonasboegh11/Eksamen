@@ -2,20 +2,22 @@ from fastapi import APIRouter, HTTPException
 from app.domain.telemetry import Telemetry
 from app.domain.charger import ChargerDevice
 from app.domain.rule_engine import evaluate
-from app.infrastructure.database import get_connection
+from app.infrastructure.incident_repository import IncidentRepository
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
 
 router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
+repository = IncidentRepository()
 
 @router.post("/")
 def receive_telemetry(telemetry: Telemetry):
-    logger.info(f"Telemetri modtaget fra lader {telemetry.charger_id} | {telemetry.power_kw} kW | {telemetry.status}")
+    stream = telemetry.to_stream()
+    logger.info(f"Telemetri modtaget fra lader {stream.charger_id} | {stream.measurement.power_kw} kW | {stream.status}")
 
     charger = ChargerDevice(
-        charger_id=telemetry.charger_id,
-        status=telemetry.status.value
+        charger_id=stream.charger_id,
+        status=stream.status.value
     )
 
     charger.receive_telemetry(telemetry)
@@ -26,28 +28,9 @@ def receive_telemetry(telemetry: Telemetry):
 
     if incidents:
         try:
-            conn = get_connection()
-            cursor = conn.cursor()
             for incident in incidents:
                 logger.warning(f"INCIDENT [{incident.severity.upper()}] | {incident.rule_name} | {incident.message}")
-                cursor.execute("""
-                    INSERT INTO incidents (incident_id, charger_id, severity, rule_name, message, value, threshold, timestamp, status, sla_deadline)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    incident.incident_id,
-                    incident.charger_id,
-                    incident.severity,
-                    incident.rule_name,
-                    incident.message,
-                    incident.value,
-                    incident.threshold,
-                    incident.timestamp,
-                    incident.status,
-                    incident.sla_deadline.deadline
-                ))
-            conn.commit()
-            cursor.close()
-            conn.close()
+                repository.save(incident)
             logger.info(f"{len(incidents)} incident(s) gemt i databasen")
         except Exception as e:
             logger.error(f"Fejl ved gemning af incidents: {e}")

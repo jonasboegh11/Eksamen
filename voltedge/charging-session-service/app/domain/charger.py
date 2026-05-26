@@ -1,15 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from app.domain.telemetry import Telemetry
+from app.domain.telemetry import Telemetry, MeasurementValue
 from app.domain.incident import Incident, Severity
-
-# Value Object
-@dataclass(frozen=True)
-class MeasurementValue:
-    power_kw: float
-    voltage: float
-    current: float
-    timestamp: datetime
 
 # Aggregat Rod — ChargerDevice
 @dataclass
@@ -24,8 +16,7 @@ class ChargerDevice:
         measurement = MeasurementValue(
             power_kw=telemetry.power_kw,
             voltage=telemetry.voltage,
-            current=telemetry.current,
-            timestamp=telemetry.timestamp
+            current=telemetry.current
         )
         self.telemetry_stream.append(measurement)
         self.status = telemetry.status.value

@@ -1,48 +1,60 @@
 from app.domain.telemetry import Telemetry
 from app.domain.incident import Incident, Severity
 
+# Tærskelværdier for belastning (kW)
+POWER_CRITICAL_THRESHOLD = 50
+POWER_HIGH_THRESHOLD = 22
+POWER_MEDIUM_THRESHOLD = 11
+POWER_LOW_THRESHOLD = 7
+
+# Tærskelværdier for spænding (V)
+VOLTAGE_MIN = 207
+VOLTAGE_MAX = 253
+VOLTAGE_NOMINAL = 230
+
+
 def evaluate(telemetry: Telemetry) -> list[Incident]:
     incidents = []
 
     # Regel 1: Kritisk overbelastning (>50 kW)
-    if telemetry.power_kw > 50:
+    if telemetry.power_kw > POWER_CRITICAL_THRESHOLD:
         incidents.append(Incident(
             charger_id=telemetry.charger_id,
             severity=Severity.CRITICAL,
             rule_name="power_critical",
             message=f"Kritisk overbelastning på lader {telemetry.charger_id}",
             value=telemetry.power_kw,
-            threshold=50
+            threshold=POWER_CRITICAL_THRESHOLD
         ))
     # Regel 2: Høj belastning (>22 kW)
-    elif telemetry.power_kw > 22:
+    elif telemetry.power_kw > POWER_HIGH_THRESHOLD:
         incidents.append(Incident(
             charger_id=telemetry.charger_id,
             severity=Severity.HIGH,
             rule_name="power_high",
             message=f"Høj belastning på lader {telemetry.charger_id}",
             value=telemetry.power_kw,
-            threshold=22
+            threshold=POWER_HIGH_THRESHOLD
         ))
     # Regel 3: Forhøjet belastning (>11 kW)
-    elif telemetry.power_kw > 11:
+    elif telemetry.power_kw > POWER_MEDIUM_THRESHOLD:
         incidents.append(Incident(
             charger_id=telemetry.charger_id,
             severity=Severity.MEDIUM,
             rule_name="power_medium",
             message=f"Forhøjet belastning på lader {telemetry.charger_id}",
             value=telemetry.power_kw,
-            threshold=11
+            threshold=POWER_MEDIUM_THRESHOLD
         ))
     # Regel 4: Lav men bemærkelsesværdig belastning (>7 kW)
-    elif telemetry.power_kw > 7:
+    elif telemetry.power_kw > POWER_LOW_THRESHOLD:
         incidents.append(Incident(
             charger_id=telemetry.charger_id,
             severity=Severity.LOW,
             rule_name="power_low",
             message=f"Usædvanlig belastning på lader {telemetry.charger_id}",
             value=telemetry.power_kw,
-            threshold=7
+            threshold=POWER_LOW_THRESHOLD
         ))
 
     # Regel 5: Lader er faulted
@@ -68,14 +80,14 @@ def evaluate(telemetry: Telemetry) -> list[Incident]:
         ))
 
     # Regel 7: Unormal spænding
-    if telemetry.voltage < 207 or telemetry.voltage > 253:
+    if telemetry.voltage < VOLTAGE_MIN or telemetry.voltage > VOLTAGE_MAX:
         incidents.append(Incident(
             charger_id=telemetry.charger_id,
             severity=Severity.LOW,
             rule_name="voltage_abnormal",
             message=f"Unormal spænding på lader {telemetry.charger_id}",
             value=telemetry.voltage,
-            threshold=230
+            threshold=VOLTAGE_NOMINAL
         ))
 
     return incidents

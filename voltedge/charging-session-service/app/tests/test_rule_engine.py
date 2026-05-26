@@ -80,4 +80,4 @@ def test_sla_deadline_critical():
     incidents = evaluate(telemetry)
     assert incidents[0].sla_deadline is not None
     diff = incidents[0].sla_deadline.deadline - incidents[0].timestamp
-    assert diff.seconds == 3600  # 1 time = 3600 sekunder
+    assert diff.total_seconds() == 3600  # 1 time = 3600 sekunder

@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 from enum import Enum
 import uuid
 
@@ -37,25 +37,20 @@ class SLADeadline(BaseModel):
 
 # Entitet — har unikt id og kan ændre tilstand
 class Incident(BaseModel):
-    incident_id: str = None
+    incident_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     charger_id: str
     severity: Severity
     rule_name: str
     message: str
     value: float
     threshold: float
-    timestamp: datetime = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status: IncidentStatus = IncidentStatus.OPEN
     sla_deadline: SLADeadline = None
 
-    def __init__(self, **data):
-        if not data.get("incident_id"):
-            data["incident_id"] = str(uuid.uuid4())
-        if not data.get("timestamp"):
-            data["timestamp"] = datetime.utcnow()
-        super().__init__(**data)
-        if not self.sla_deadline:
-            object.__setattr__(self, 'sla_deadline', 
+    def model_post_init(self, __context):
+        if self.sla_deadline is None:
+            object.__setattr__(self, 'sla_deadline',
                 SLADeadline.from_severity(self.severity, self.timestamp))
 
     # Entitet metode — eskalér incident

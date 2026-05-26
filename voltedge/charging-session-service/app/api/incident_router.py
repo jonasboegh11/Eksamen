@@ -1,42 +1,21 @@
 from fastapi import APIRouter, HTTPException
-from app.infrastructure.database import get_connection
+from app.infrastructure.incident_repository import IncidentRepository
 import logging
 
 logger = logging.getLogger("voltedge.charging-session")
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
+repository = IncidentRepository()
 
 @router.get("/")
 def get_incidents(severity: str = None, charger_id: str = None):
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        query = "SELECT * FROM incidents WHERE 1=1"
-        params = []
-
-        if severity:
-            query += " AND severity = %s"
-            params.append(severity)
-
-        if charger_id:
-            query += " AND charger_id = %s"
-            params.append(charger_id)
-
-        query += " ORDER BY timestamp DESC"
-
-        cursor.execute(query, params)
-        incidents = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
+        incidents = repository.get_all(severity=severity, charger_id=charger_id)
         logger.info(f"Hentet {len(incidents)} incidents — filters: severity={severity}, charger_id={charger_id}")
-
         return {
             "count": len(incidents),
             "incidents": incidents
         }
-
     except Exception as e:
         logger.error(f"Fejl ved hentning af incidents: {e}")
         raise HTTPException(status_code=500, detail="Fejl ved hentning af incidents")
@@ -44,19 +23,11 @@ def get_incidents(severity: str = None, charger_id: str = None):
 @router.get("/{incident_id}")
 def get_incident(incident_id: int):
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM incidents WHERE id = %s", (incident_id,))
-        incident = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
+        incident = repository.get_by_id(incident_id)
         if not incident:
             raise HTTPException(status_code=404, detail=f"Incident {incident_id} ikke fundet")
-
         logger.info(f"Hentet incident {incident_id}")
         return incident
-
     except HTTPException:
         raise
     except Exception as e:
