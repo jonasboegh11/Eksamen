@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, Field
 from datetime import datetime, timezone
 from enum import Enum
+from app.domain.events import TelemetryReceived, TelemetryValidated, TelemetryStored, TelemetryRejected
 
 class ChargerStatus(str, Enum):
     AVAILABLE = "available"
@@ -50,19 +51,40 @@ class MeasurementValue(BaseModel):
         return self.voltage < 207 or self.voltage > 253
 
 
-# Value Object
+# Aggregat Rod — TelemetryStream
 class TelemetryStream(BaseModel):
-    model_config = ConfigDict(frozen=True)
-    
     charger_id: str
     status: ChargerStatus
     measurement: MeasurementValue
-    timestamp: datetime = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    events: list = Field(default_factory=list)
 
-    def __init__(self, **data):
-        if not data.get("timestamp"):
-            data["timestamp"] = datetime.now(timezone.utc)
-        super().__init__(**data)
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    # Aggregat metode — modtag og valider telemetri
+    def receive(self, telemetry: "Telemetry") -> None:
+        self.events.append(TelemetryReceived(
+            charger_id=telemetry.charger_id,
+            power_kw=telemetry.power_kw,
+            voltage=telemetry.voltage,
+            current=telemetry.current,
+            status=telemetry.status.value
+        ))
+        self.events.append(TelemetryValidated(charger_id=telemetry.charger_id))
+
+    # Aggregat metode — gem telemetri
+    def store(self) -> None:
+        self.events.append(TelemetryStored(charger_id=self.charger_id))
+
+    # Aggregat metode — afvis telemetri
+    def reject(self, reason: str) -> None:
+        self.events.append(TelemetryRejected(charger_id=self.charger_id, reason=reason))
+
+    # Aggregat metode — hent upopublicerede events
+    def pull_events(self) -> list:
+        events = self.events.copy()
+        self.events.clear()
+        return events
 
 
 # Bagudkompatibilitet
@@ -72,12 +94,7 @@ class Telemetry(BaseModel):
     power_kw: float
     voltage: float
     current: float
-    timestamp: datetime = None
-
-    def __init__(self, **data):
-        if not data.get("timestamp"):
-            data["timestamp"] = datetime.now(timezone.utc)
-        super().__init__(**data)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @field_validator("power_kw")
     @classmethod
