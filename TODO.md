@@ -5,18 +5,25 @@
 - [ ] Analytics endpoint (incidents per lader, per severity)
 
 ## DDD
-- [ ] Aggregater skal være tydelige i koden (eksamenskrav)
-- [ ] Entiteter, value objects og domain services skal kunne identificeres
+- [ ] Charger som aggregat med metoder i Python koden
+- [ ] Incident som entitet med unikt id i Python koden
+- [ ] Telemetry som value object i Python koden
+- [ ] Klassediagram der matcher Python koden
 
 ## DevSecOps
 - [x] CI/CD pipeline i GitHub Actions (build + test)
-- [x] Detect secrets i GitHub Actions (scanner for passwords/API keys i koden)
+- [x] Detect secrets i GitHub Actions
+- [x] CD pipeline med GitHub Container Registry
+- [ ] Unit tests på regelmotoren
 
-## Overvågning
+## Overvågning — A4.3
 - [ ] Prometheus (samler metrics fra API'et)
-- [ ] Grafana (visualiserer metrics fra Prometheus)
+- [ ] Grafana dashboard 1 — teknisk overvågning (API svartider, fejlrate, database performance)
 
-## Machine Learning
+## BI — A4.2
+- [ ] Grafana dashboard 2 — forretningsdata (incidents per lader, per severity, over tid)
+
+## Machine Learning — A4.2
 - [ ] Predictive incident service (forudsig fejl baseret på historisk telemetri)
 
 ## Dokumentation
