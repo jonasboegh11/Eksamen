@@ -6,15 +6,17 @@ from app.domain.events import (
     ThresholdExceeded,
     AlarmTriggered
 )
-from app.domain.rule_engine import (
-    POWER_CRITICAL_THRESHOLD,
-    POWER_HIGH_THRESHOLD,
-    POWER_MEDIUM_THRESHOLD,
-    POWER_LOW_THRESHOLD,
-    VOLTAGE_MIN,
-    VOLTAGE_MAX,
-    VOLTAGE_NOMINAL
-)
+
+# Tærskelværdier for belastning (kW)
+POWER_CRITICAL_THRESHOLD = 50
+POWER_HIGH_THRESHOLD = 22
+POWER_MEDIUM_THRESHOLD = 11
+POWER_LOW_THRESHOLD = 7
+
+# Tærskelværdier for spænding (V)
+VOLTAGE_MIN = 207
+VOLTAGE_MAX = 253
+VOLTAGE_NOMINAL = 230
 
 # Value Object
 @dataclass(frozen=True)

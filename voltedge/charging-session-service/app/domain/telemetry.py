@@ -3,46 +3,56 @@ from datetime import datetime, timezone
 from enum import Enum
 from app.domain.events import TelemetryReceived, TelemetryValidated, TelemetryStored, TelemetryRejected
 
+
 class ChargerStatus(str, Enum):
     AVAILABLE = "available"
     OCCUPIED = "occupied"
     FAULTED = "faulted"
     OFFLINE = "offline"
 
+
+# Delte valideringsfunktioner
+def validate_power(v: float) -> float:
+    if v < 0:
+        raise ValueError(f"power_kw må ikke være negativ, fik {v}")
+    if v > 350:
+        raise ValueError(f"power_kw overskrider maksimum (350 kW), fik {v}")
+    return v
+
+def validate_voltage(v: float) -> float:
+    if v < 0:
+        raise ValueError(f"voltage må ikke være negativ, fik {v}")
+    if v > 1000:
+        raise ValueError(f"voltage overskrider maksimum (1000 V), fik {v}")
+    return v
+
+def validate_current(v: float) -> float:
+    if v < 0:
+        raise ValueError(f"current må ikke være negativ, fik {v}")
+    if v > 630:
+        raise ValueError(f"current overskrider maksimum (630 A), fik {v}")
+    return v
+
+
 # Value Object
 class MeasurementValue(BaseModel):
     model_config = ConfigDict(frozen=True)
-    
+
     power_kw: float
     voltage: float
     current: float
 
     @field_validator("power_kw")
     @classmethod
-    def validate_power(cls, v):
-        if v < 0:
-            raise ValueError(f"power_kw må ikke være negativ, fik {v}")
-        if v > 350:
-            raise ValueError(f"power_kw overskrider maksimum (350 kW), fik {v}")
-        return v
+    def check_power(cls, v): return validate_power(v)
 
     @field_validator("voltage")
     @classmethod
-    def validate_voltage(cls, v):
-        if v < 0:
-            raise ValueError(f"voltage må ikke være negativ, fik {v}")
-        if v > 1000:
-            raise ValueError(f"voltage overskrider maksimum (1000 V), fik {v}")
-        return v
+    def check_voltage(cls, v): return validate_voltage(v)
 
     @field_validator("current")
     @classmethod
-    def validate_current(cls, v):
-        if v < 0:
-            raise ValueError(f"current må ikke være negativ, fik {v}")
-        if v > 630:
-            raise ValueError(f"current overskrider maksimum (630 A), fik {v}")
-        return v
+    def check_current(cls, v): return validate_current(v)
 
     def is_overloaded(self) -> bool:
         return self.power_kw > 50
@@ -80,14 +90,14 @@ class TelemetryStream(BaseModel):
     def reject(self, reason: str) -> None:
         self.events.append(TelemetryRejected(charger_id=self.charger_id, reason=reason))
 
-    # Aggregat metode — hent upopublicerede events
+    # Aggregat metode — hent upublicerede events
     def pull_events(self) -> list:
         events = self.events.copy()
         self.events.clear()
         return events
 
 
-# Bagudkompatibilitet
+# Input model — bruges til API-modtagelse af telemetri
 class Telemetry(BaseModel):
     charger_id: str
     status: ChargerStatus
@@ -98,30 +108,15 @@ class Telemetry(BaseModel):
 
     @field_validator("power_kw")
     @classmethod
-    def validate_power(cls, v):
-        if v < 0:
-            raise ValueError(f"power_kw må ikke være negativ, fik {v}")
-        if v > 350:
-            raise ValueError(f"power_kw overskrider maksimum (350 kW), fik {v}")
-        return v
+    def check_power(cls, v): return validate_power(v)
 
     @field_validator("voltage")
     @classmethod
-    def validate_voltage(cls, v):
-        if v < 0:
-            raise ValueError(f"voltage må ikke være negativ, fik {v}")
-        if v > 1000:
-            raise ValueError(f"voltage overskrider maksimum (1000 V), fik {v}")
-        return v
+    def check_voltage(cls, v): return validate_voltage(v)
 
     @field_validator("current")
     @classmethod
-    def validate_current(cls, v):
-        if v < 0:
-            raise ValueError(f"current må ikke være negativ, fik {v}")
-        if v > 630:
-            raise ValueError(f"current overskrider maksimum (630 A), fik {v}")
-        return v
+    def check_current(cls, v): return validate_current(v)
 
     def to_stream(self) -> TelemetryStream:
         return TelemetryStream(
