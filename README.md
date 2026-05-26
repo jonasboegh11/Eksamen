@@ -31,12 +31,14 @@ voltedge/charging-session-service/
 │   │   ├── incident.py         # Incident entitet + SLADeadline value object
 │   │   ├── charger.py          # ChargerDevice aggregat
 │   │   ├── technician.py       # Technician entitet
+│   │   ├── prediction_service.py # Domain service til risikovurdering
 │   │   └── events.py           # Domain events
 │   ├── infrastructure/         # Database og repositories
 │   │   ├── database.py
-│   │   └── incident_repository.py
+│   │   ├── incident_repository.py
+│   │   └── analytics_repository.py
 │   └── tests/                  # Unit tests
-│       └── test_rule_engine.py
+│       └── test_anomaly.py
 ├── Dockerfile
 ├── docker-compose.yml
 ├── prometheus.yml
@@ -99,6 +101,7 @@ make clean    # stop + slet database
 | GET | /analytics/incidents-per-severity | Incidents fordelt på severity |
 | GET | /analytics/incidents-per-charger | Incidents fordelt på lader |
 | GET | /analytics/most-problematic-charger | Mest problematiske lader |
+| GET | /analytics/predict/{charger_id} | Risikovurdering for specifik lader |
 
 ### System
 | Method | Endpoint | Beskrivelse |
@@ -141,4 +144,6 @@ Pipelinen kører automatisk ved push til main:
 | Entitet | Technician | Tekniker der kan tildeles incidents |
 | Value Object | MeasurementValue | Immutable måling (kW, volt, ampere) |
 | Value Object | SLADeadline | Beregnet deadline baseret på severity |
-| Domain Service | rule_engine | Evaluerer telemetri mod regler |
+| Value Object | ChargerFeatures | Input features til risikovurdering |
+| Value Object | PredictionResult | Resultat af risikovurdering |
+| Domain Service | PredictionService | Forudsiger risiko baseret på historisk data |

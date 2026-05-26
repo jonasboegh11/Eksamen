@@ -1,7 +1,5 @@
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-import numpy as np
-from app.domain.incident import Severity
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
 # Value Object — input features til ML model
 @dataclass(frozen=True)
@@ -27,8 +25,6 @@ class PredictionResult:
 class PredictionService:
 
     def predict(self, features: ChargerFeatures) -> PredictionResult:
-        # Simpel regelbaseret scoring model
-        # I produktion ville dette være en trænet ML model
         score = 0.0
 
         # Faktor 1: Antal incidents de sidste 24 timer
@@ -53,10 +49,8 @@ class PredictionService:
         elif features.avg_value > 22:
             score += 0.1
 
-        # Normaliser score til 0-1
         score = min(score, 1.0)
 
-        # Klassificer risiko
         if score >= 0.7:
             risk_level = "critical"
             recommendation = f"Lader {features.charger_id} kræver øjeblikkelig inspektion"
