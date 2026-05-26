@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from app.api.telemetry_router import router as telemetry_router
 from app.api.incident_router import router as incident_router
+from app.api.analytics_router import router as analytics_router
 from app.infrastructure.database import init_db
 from prometheus_fastapi_instrumentator import Instrumentator
 import os
@@ -38,6 +39,7 @@ Instrumentator().instrument(app).expose(app)
 
 app.include_router(telemetry_router)
 app.include_router(incident_router)
+app.include_router(analytics_router)
 
 @app.get("/health")
 def health_check():
