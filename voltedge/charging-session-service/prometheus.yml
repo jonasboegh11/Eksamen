@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'voltedge-charging-session'
+    static_configs:
+      - targets: ['charging-session-service:8000']

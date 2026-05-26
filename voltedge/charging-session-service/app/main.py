@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from app.api.telemetry_router import router as telemetry_router
 from app.api.incident_router import router as incident_router
 from app.infrastructure.database import init_db
+from prometheus_fastapi_instrumentator import Instrumentator
 import os
 
 load_dotenv()
@@ -32,6 +33,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+Instrumentator().instrument(app).expose(app)
 
 app.include_router(telemetry_router)
 app.include_router(incident_router)

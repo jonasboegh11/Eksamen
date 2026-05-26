@@ -14,7 +14,7 @@
 - [x] CI/CD pipeline i GitHub Actions (build + test)
 - [x] Detect secrets i GitHub Actions
 - [x] CD pipeline med GitHub Container Registry
-- [ ] Unit tests på regelmotoren
+- [x] Unit tests på regelmotoren
 
 ## Overvågning — A4.3
 - [ ] Prometheus (samler metrics fra API'et)
